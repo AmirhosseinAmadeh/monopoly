@@ -1,19 +1,23 @@
 public class Main_game {
     public static void main(String[] args) {
         boolean x = false;
+        int Place = 0;
         Game g1 = Game.create_game();
-        try {
-            g1.StartGame();
-        } catch (Exception e) {
-            System.out.println("no game created");
-        }
+
         while (x == false) {
             System.out.println("round " + g1.getRound());
-            switch (key) {
-                case value:
-                    
+            switch (Place) {
+                case 0:
+                    try {
+                        g1.StartGame();
+                    } catch (Exception e) {
+                        System.out.println("no game created");
+                    }
                     break;
-            
+                    case 1:
+
+                    break;
+
                 default:
                     break;
             }
