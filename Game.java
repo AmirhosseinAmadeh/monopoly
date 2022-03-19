@@ -1,3 +1,4 @@
+import java.util.Objects;
 import java.util.Scanner;
 
 public class Game{
@@ -11,6 +12,10 @@ public class Game{
         return game;
     }
     public void StartGame() {
+        if(Objects.isNull(this)){
+            System.out.println("no game created");
+            return;
+        }
         for (int i = 0; i < players.length; i++) {
             players[i] = new Player(scanner.nextLine(), i+1);
         }
