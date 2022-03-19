@@ -5,6 +5,7 @@ public class Game{
     private static Game game = new Game();
     private Player[] players = new Player[4];
     Scanner scanner = new Scanner(System.in);
+    private int round = 1;
 
     private Game() {
     }
@@ -19,6 +20,10 @@ public class Game{
         for (int i = 0; i < players.length; i++) {
             players[i] = new Player(scanner.nextLine(), i+1);
         }
+        
+    }
+    public int getRound() {
+        return round;
     }
     
 }
