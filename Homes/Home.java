@@ -1,4 +1,6 @@
 package Homes;
+import main.Player;
+
 public abstract class Home {
     private int woner = 0;
     private Color color = Color.white;
@@ -22,6 +24,6 @@ public abstract class Home {
     public void setColor(Color color) {
         this.color = color;
     }
-    
+    public abstract void Action(Player player);
     
 }
