@@ -5,7 +5,7 @@ public class Game{
     private static Game game = new Game();
     private Player[] players = new Player[4];
     Scanner scanner = new Scanner(System.in);
-    private int round = 1;
+    private int round = 0;
 
     private Game() {
     }
@@ -23,6 +23,7 @@ public class Game{
         
     }
     public int getRound() {
+        round++;
         return round;
     }
     
