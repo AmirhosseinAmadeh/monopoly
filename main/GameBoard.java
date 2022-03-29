@@ -1,7 +1,7 @@
+package main;
 import Homes.*;
-
 class GameBoard {
-    private Home[] homes = new Home[24];
+    private static Home[] homes = new Home[24];
     {
         homes[0]  = new Parking(0, Color.white);
         homes[1]  = new EmptyLand(0, Color.green);
@@ -28,4 +28,7 @@ class GameBoard {
         homes[22] = new EmptyLand(0, Color.blue);
         homes[23] = new ChanceArea(0, Color.white);
     }
+private static void play(Player player) {
+    homes[player.getPlace()].Action(player);
+}
 }
