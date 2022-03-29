@@ -2,7 +2,7 @@ public class Main_game {
     public static void main(String[] args) {
         boolean x = false;
         int Place = 0;
-        Game g1 = Game.create_game();
+        Pre_Game g1 = Pre_Game.create_game();
 
         while (x == false) {
             System.out.println("round " + g1.getRound());

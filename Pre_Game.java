@@ -1,15 +1,15 @@
 import java.util.Objects;
 import java.util.Scanner;
 
-public class Game{
-    private static Game game = new Game();
+public class Pre_Game{
+    private static Pre_Game game = new Pre_Game();
     private Player[] players = new Player[4];
     Scanner scanner = new Scanner(System.in);
     private int round = 0;
 
-    private Game() {
+    private Pre_Game() {
     }
-    public static Game create_game(){
+    public static Pre_Game create_game(){
         return game;
     }
     public void StartGame() {
