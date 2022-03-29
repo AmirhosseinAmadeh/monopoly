@@ -17,5 +17,14 @@ public abstract class Home {
     public void setWoner(int woner) {
         this.woner = woner;
     }
+
+    public color getColor() {
+        return Color;
+    }
+
+    public void setColor(color color) {
+        Color = color;
+    }
+    
     
 }
