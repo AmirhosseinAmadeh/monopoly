@@ -1,4 +1,10 @@
 package main;
+
+import java.util.Objects;
+import java.util.Scanner;
+
+import Homes.Home;
+
 public class Player {
     private String name;
     private int Turn;
@@ -44,6 +50,32 @@ public class Player {
         this.place = place;
     }
     
-    
+    public void sell_Non_cashAssets(){
+        boolean vl = false;
+        int[] Temp = new int[12];
+        int temp_counter = 0;
+        System.out.println("your property is....");
+        for (int i = 0; i < Non_cashAssets.length; i++) {
+            if(Objects.isNull(Non_cashAssets[i])){
+                continue;
+            }else{
+                vl = true;
+                Temp[temp_counter] = Non_cashAssets[i];
+                temp_counter++;
+            }
+        }
+        if(vl == false){
+            System.out.println("empty");
+            System.out.println("press any key to return");
+            Scanner scanner = new Scanner(System.in);
+            scanner.nextLine();
+            scanner.close();
+            return;
+        }
+        for (int i = 0; i < Temp.length; i++) {
+            System.out.println(i + "- " + GameBoard.getHomes()[Temp[i]]);
+            
+        }
+    }
     
 }

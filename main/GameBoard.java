@@ -28,6 +28,9 @@ class GameBoard {
         homes[22] = new EmptyLand(0, Color.blue);
         homes[23] = new ChanceArea(0, Color.white);
     }
+    public static Home[] getHomes() {
+        return homes;
+    }
 private static void play(Player player) {
     homes[player.getPlace()].Action(player);
 }
