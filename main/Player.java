@@ -2,9 +2,6 @@ package main;
 
 import java.util.Objects;
 import java.util.Scanner;
-
-import Homes.Home;
-
 public class Player {
     private String name;
     private int Turn;
