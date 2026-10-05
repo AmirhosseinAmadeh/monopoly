@@ -1,1 +1,6 @@
 miniproject.pdf
+out/
+build/
+*.class
+.idea/
+.vscode/
