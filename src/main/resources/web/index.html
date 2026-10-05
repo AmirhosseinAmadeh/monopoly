@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>City Monopoly</title>
+<style>
+:root{--bg:#eef1f6;--panel:#fff;--ink:#1b2333;--mute:#6a7489;--line:#d9dfea;--brand:#2f5bea;--brand-ink:#fff;
+--red:#e5484d;--green:#30a46c;--blue:#3e63dd;--yellow:#f0b429;--none:#c3cad8;--p0:#8e4ec6;--p1:#0ea5a5;--p2:#e5833a;--p3:#d6409f}
+@media(prefers-color-scheme:dark){:root{--bg:#0f131c;--panel:#171d2a;--ink:#e8ecf5;--mute:#93a0b8;--line:#2a3347;--brand:#6b8cff;--brand-ink:#0b1020}}
+*{box-sizing:border-box}
+body{margin:0;font:14px/1.45 -apple-system,Segoe UI,Roboto,Arial,sans-serif;background:var(--bg);color:var(--ink)}
+header{padding:16px 24px 0}h1{margin:0;font-size:22px}h1 span{color:var(--brand)}
+.wrap{max-width:1100px;margin:0 auto;padding:12px 16px 32px}
+.setup{max-width:520px;margin:24px auto;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:20px}
+.setup h2{margin:0 0 4px}.setup p{color:var(--mute);margin:0 0 14px}
+.row{display:flex;gap:8px;margin-bottom:8px;align-items:center}.row .dot{width:14px;height:14px;border-radius:50%;flex:none}
+input,select,button{font:inherit;color:var(--ink)}
+input,select{flex:1;padding:7px 10px;border:1px solid var(--line);border-radius:8px;background:var(--bg)}
+button{border:1px solid var(--line);background:var(--panel);border-radius:8px;padding:8px 16px;cursor:pointer}
+button.primary{background:var(--brand);color:var(--brand-ink);border-color:var(--brand);font-weight:600}
+button:disabled{opacity:.45;cursor:default}
+.board{display:grid;grid-template-columns:repeat(7,1fr);grid-template-rows:repeat(7,1fr);gap:4px;aspect-ratio:1/1;max-width:820px;margin:0 auto}
+.sq{background:var(--panel);border:1px solid var(--line);border-radius:8px;position:relative;display:flex;flex-direction:column;padding:0;overflow:hidden;min-width:0;min-height:0}
+.sq .bar{height:9px;background:var(--none);flex:none}
+.sq.red .bar{background:var(--red)}.sq.green .bar{background:var(--green)}.sq.blue .bar{background:var(--blue)}.sq.yellow .bar{background:var(--yellow)}
+.sq .body{flex:1;padding:3px 5px;display:flex;flex-direction:column;justify-content:space-between;min-height:0}
+.sq .ico{font-size:17px;line-height:1}.sq .nm{font-size:10.5px;font-weight:600;line-height:1.15}.sq .pr{font-size:10px;color:var(--mute)}
+.sq .own{position:absolute;right:4px;top:12px;width:11px;height:11px;border-radius:50%;border:2px solid var(--panel)}
+.sq.here{outline:2px solid var(--brand)}
+.tokens{display:flex;gap:2px;flex-wrap:wrap}.tok{width:16px;height:16px;border-radius:50%;color:#fff;font-size:9px;font-weight:700;display:flex;align-items:center;justify-content:center;border:2px solid var(--panel);box-shadow:0 0 0 1px rgba(0,0,0,.2)}
+.center{grid-column:2/7;grid-row:2/7;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px 14px;display:flex;flex-direction:column;gap:8px;min-height:0;overflow:hidden}
+.center h2{margin:0;font-size:15px;display:flex;justify-content:space-between;align-items:baseline}.center h2 small{color:var(--mute);font-weight:400;font-size:12px}
+.players{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.pl{border:1px solid var(--line);border-radius:8px;padding:5px 8px;font-size:12px}.pl.cur{border-color:var(--brand);box-shadow:0 0 0 1px var(--brand)}.pl.dead{opacity:.45;text-decoration:line-through}
+.pl b{display:flex;align-items:center;gap:5px}.pl .dot{width:10px;height:10px;border-radius:50%}.pl span{color:var(--mute)}
+.actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.dice{font-size:22px;letter-spacing:2px}
+.log{flex:1;min-height:0;overflow:auto;font-size:12px;color:var(--mute);border-top:1px solid var(--line);padding-top:6px}.log div{padding:1px 0}.log div:last-child{color:var(--ink);font-weight:600}
+.banner{background:var(--brand);color:var(--brand-ink);border-radius:8px;padding:6px 10px;font-weight:600}
+@media(max-width:760px){.sq .nm{font-size:8px}.sq .ico{font-size:12px}.sq .pr{display:none}.center{padding:8px}.players{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<header><h1>City <span>Monopoly</span></h1></header>
+<div class="wrap" id="app"></div>
+<script>
+const $ = (s, el = document) => el.querySelector(s);
+const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const ICON = {PARKING:'🅿️',LAND:'🏠',CINEMA:'🎬',ROAD:'🛣️',AIRPORT:'✈️',AWARD:'🏆',PRISON:'⛓️',TAX:'🧾',BANK:'🏦',CHANCE:'❓'};
+let gameId = null, S = null, busy = false, error = '';
+
+async function api(path, method = 'GET', body) {
+  const r = await fetch('/api/games' + path, {method, body: body ? JSON.stringify(body) : undefined});
+  const j = await r.json();
+  if (!r.ok) throw new Error(j.error || r.statusText);
+  return j;
+}
+
+function setupScreen() {
+  const defaults = [['You', 'HUMAN'], ['Ava', 'BALANCED'], ['Max', 'AGGRESSIVE'], ['', 'NONE']];
+  $('#app').innerHTML = `<div class="setup"><h2>New game</h2><p>2 to 4 players. Humans click, bots play instantly between your turns.</p>
+    ${defaults.map(([n, t], i) => `<div class="row"><span class="dot" style="background:var(--p${i})"></span>
+      <input id="n${i}" placeholder="Player ${i + 1}" value="${n}" maxlength="20">
+      <select id="t${i}">${['HUMAN','CAUTIOUS','BALANCED','AGGRESSIVE', ...(i > 1 ? ['NONE'] : [])].map(o =>
+        `<option ${o === t ? 'selected' : ''}>${o}</option>`).join('')}</select></div>`).join('')}
+    <div class="row" style="margin-top:12px"><button class="primary" id="start">Start game</button></div><div id="err" style="color:#e5484d"></div></div>`;
+  $('#start').onclick = async () => {
+    const players = [0, 1, 2, 3].filter(i => $('#t' + i).value !== 'NONE')
+      .map(i => ({name: $('#n' + i).value.trim() || 'Player ' + (i + 1), strategy: $('#t' + i).value}));
+    try { S = await api('', 'POST', {players}); gameId = S.id; location.hash = gameId; draw(); }
+    catch (e) { $('#err').textContent = e.message; }
+  };
+}
+
+function cell(i) {  // board position -> CSS grid row/column (index 0 is the bottom-right corner, going anticlockwise)
+  if (i <= 6) return [7, 7 - i];
+  if (i <= 11) return [7 - (i - 6), 1];
+  if (i <= 18) return [1, 1 + (i - 12)];
+  return [1 + (i - 18), 7];
+}
+
+function draw() {
+  const cur = S.players[S.current];
+  const humanTurn = S.phase !== 'OVER' && cur.strategy === 'HUMAN';
+  const sq = S.squares.map(s => {
+    const [r, c] = cell(s.index);
+    const here = S.players.map((p, i) => p.alive && p.position === s.index ? `<div class="tok" style="background:var(--p${i})" title="${esc(p.name)}">${esc(p.name[0].toUpperCase())}</div>` : '').join('');
+    const price = s.price ? `${s.price}${s.owner >= 0 ? ' · rent ' + s.rent : ''}` : '';
+    return `<div class="sq ${s.color.toLowerCase()} ${S.players[S.current].position === s.index ? 'here' : ''}" style="grid-row:${r};grid-column:${c}">
+      <div class="bar"></div>${s.owner >= 0 ? `<div class="own" style="background:var(--p${s.owner})" title="Owner: ${esc(S.players[s.owner].name)}"></div>` : ''}
+      <div class="body"><div><div class="ico">${ICON[s.kind]}</div><div class="nm">${esc(s.name)}</div><div class="pr">${price}</div></div><div class="tokens">${here}</div></div></div>`;
+  }).join('');
+
+  const players = S.players.map((p, i) => `<div class="pl ${i === S.current && S.phase !== 'OVER' ? 'cur' : ''} ${p.alive ? '' : 'dead'}">
+    <b><i class="dot" style="background:var(--p${i})"></i>${esc(p.name)} <span>${p.strategy === 'HUMAN' ? '' : p.strategy.toLowerCase()}</span></b>
+    <span>cash ${p.cash} · worth ${p.netWorth}${p.prisonTurns ? ' · in prison' : ''}</span></div>`).join('');
+
+  let actions;
+  if (S.phase === 'OVER') {
+    const w = S.winner == null ? 'Nobody' : S.players[S.winner].name;
+    actions = `<div class="banner">Game over - ${esc(w)} wins</div><button class="primary" id="again">New game</button>`;
+  } else if (S.phase === 'BUY') {
+    const q = S.squares[S.pending];
+    actions = `<span>${esc(cur.name)}: buy <b>${esc(q.name)}</b> for ${q.price}?</span><button class="primary" id="yes" ${busy ? 'disabled' : ''}>Buy</button><button id="no" ${busy ? 'disabled' : ''}>Pass</button>`;
+  } else {
+    actions = `<button class="primary" id="roll" ${busy || !humanTurn ? 'disabled' : ''}>Roll dice</button><span class="dice">${S.dice[0] ? '🎲 ' + S.dice[0] + ' + ' + S.dice[1] : ''}</span><span>${esc(cur.name)}'s turn</span>`;
+  }
+  $('#app').innerHTML = `<div class="board">${sq}<div class="center">
+    <h2>Round ${S.round} <small>of ${S.maxRounds} · parking pot ${S.pot}</small></h2>
+    <div class="players">${players}</div>
+    <div class="actions">${actions}</div>
+    ${error ? `<div style="color:#e5484d">${esc(error)}</div>` : ''}
+    <div class="log" id="log">${S.log.map(l => `<div>${esc(l)}</div>`).join('')}</div></div></div>`;
+  const log = $('#log'); log.scrollTop = log.scrollHeight;
+  if ($('#roll')) $('#roll').onclick = () => act('/roll');
+  if ($('#yes')) $('#yes').onclick = () => act('/buy', {buy: true});
+  if ($('#no')) $('#no').onclick = () => act('/buy', {buy: false});
+  if ($('#again')) $('#again').onclick = () => { location.hash = ''; setupScreen(); };
+}
+
+async function act(path, body) {
+  busy = true; error = ''; draw();
+  try { S = await api('/' + gameId + path, 'POST', body || {}); gameId = S.id || gameId; }
+  catch (e) { error = e.message; }
+  busy = false; draw();
+}
+
+async function boot() {
+  const id = location.hash.slice(1);   // reopen a running game after a refresh
+  if (id) {
+    try { S = await api('/' + id); gameId = id; draw(); return; } catch (e) { /* fall through to setup */ }
+  }
+  setupScreen();
+}
+boot();
+</script>
+</body>
+</html>
